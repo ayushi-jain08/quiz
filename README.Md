@@ -39,7 +39,6 @@ git clone https://github.com/ayushi-jain08/quiz.git
 
 ```bash
    PORT=7070
-   MONGO_URL="mongodb+srv://ayushijain08:Aj_840950@cluster0.1exlxqi.mongodb.net/Quiz"
 ```
 
 5. Start the backend server:
@@ -62,25 +61,26 @@ git clone https://github.com/ayushi-jain08/quiz.git
 
 ```
 .
-├── controllers         
+├── controllers
 │   ├── quiz.js             # Logic of quiz controllers
-│  
-├── routes         
+│
+├── routes
 │   ├── quiz.js             # Logic of quiz routes
-│  
+│
 ├── utils
 │   ├── ErrorHandler.js            #  logic to deal with errors
 │   ├── pino.js             # pino logic to save and logger and maintains the records of all logs
 │   ├── mongodb.js          # Mongodb database connection logic
 │
-├── middleware                 
-│   └── validation–——validation.js  #validate the quiz creation         
-│    
+├── middleware
+│   └── validation–——validation.js  #validate the quiz creation
+│
 ├── .config.js——db.js           # mongodb connection code
 │
 ├── .server.js              # logics of express server and assemble all module to cuppling with each other
 |
-├── .env                    # Contains confidential keys 
-├── .gitignore              # Git logic to ignore files 
+├── .env                    # Contains confidential keys
+├── .gitignore              # Git logic to ignore files
 ├── package.json            # Contains all the packages information
 └── README.md               # Documentation of code
+```
