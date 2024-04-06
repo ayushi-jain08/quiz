@@ -25,7 +25,7 @@ This is a simple quiz application built using Node.js that tests users' knowledg
 1. Clone the repository:
 
 ```bash
-git clone
+git clone https://github.com/ayushi-jain08/quiz.git
 ```
 
 2. Install dependencies:
