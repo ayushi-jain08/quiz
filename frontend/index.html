@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node.js Quiz</title>
+    <style>
+        .feedback-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .feedback-item {
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-weight: bold;
+        }
+
+        .result {
+            font-style: italic;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        #submit-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            font-size: 18px;
+            font-family: serif;
+        }
+
+        #submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .question {
+            border: 1px solid rgb(211, 209, 209);
+            margin-top: 10px;
+            padding: 5px;
+        }
+
+        li {
+            list-style: none;
+            font-family: serif;
+            font-weight: 400;
+            padding: 3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Node.js Quiz</h1>
+
+    <div class="question-container"></div>
+
+    <button id="submit-btn">Submit Answers</button>
+
+    <div class="feedback" id="feedback"></div>
+
+    <script>
+        const questionContainer = document.querySelector('.question-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const feedbackDiv = document.getElementById('feedback');
+        let answersSubmitted = false;
+
+        async function fetchQuestions() {
+            if (answersSubmitted) {
+                return;
+            }
+            try {
+                const response = await fetch('http://localhost:7070/api/quiz/questions');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch questions');
+                }
+                const {
+                    data
+                } = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching questions:', error);
+                return [];
+            }
+        }
+
+        function renderQuestions(questions) {
+            questionContainer.innerHTML = '';
+            questions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question');
+                questionDiv.innerHTML = `
+                    <h3>${index + 1}. ${question.question}</h3>
+                    <ul class="options" id="options-${index}">
+                        ${question.options.map((option, optionIndex) => `
+                            <li>
+                                <input type="radio" id="option-${index}-${optionIndex}" name="question-${index}" value="${optionIndex}" data-question-id="${question._id}"/>
+                                <label for="option-${index}-${optionIndex}">${option}</label>
+                            </li>
+                        `).join('')}
+                    </ul>`;
+                questionContainer.appendChild(questionDiv);
+            });
+        }
+
+        async function submitAnswers() {
+            const userAnswers = getUserAnswers();
+
+            // Check if all questions have been answered
+            const allQuestionsAnswered = userAnswers.length === questionContainer.querySelectorAll('.question').length;
+            if (!allQuestionsAnswered) {
+                window.alert('Please answer all questions before submitting.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:7070/api/quiz/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        answers: getUserAnswers()
+                    })
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to submit answers');
+                }
+                const responseData = await response.json();
+                displayFeedback(responseData);
+                console.log("ii", responseData)
+                answersSubmitted = true;
+                submitBtn.remove();
+            } catch (error) {
+                console.error('Error submitting answers:', error);
+                feedbackDiv.textContent = 'Failed to submit answers. Please try again later.';
+            }
+        }
+
+        function getUserAnswers() {
+            const userAnswers = [];
+            const questionDivs = document.querySelectorAll('.question');
+            questionDivs.forEach((questionDiv, index) => {
+                const selectedOption = questionDiv.querySelector(`input[name="question-${index}"]:checked`);
+                if (selectedOption) {
+                    const questionId = selectedOption.dataset.questionId;
+                    const optionLabel = questionDiv.querySelector(`label[for="${selectedOption.id}"]`).textContent.trim();
+                    const letter = optionLabel.charAt(0);
+                    userAnswers.push({
+                        questionId,
+                        optionLabel: letter
+                    });
+                }
+            });
+            console.log(userAnswers)
+            return userAnswers;
+        }
+
+
+        function displayFeedback(feedbackData) {
+            // Remove the question container
+            questionContainer.innerHTML = '';
+
+            // Display the feedback to the user
+            const feedbackHTML = feedbackData.feedback.map((item, index) => `
+    <div class="feedback-item">
+        <p class="question">Question ${index + 1}: ${item.question}</p>
+        <p>Your Answer: ${item.userAnswer}</p>
+        <p>Correct Answer: ${item.correctAnswer}</p>
+        <p class="result ${item.isCorrect ? 'correct' : 'incorrect'}">${item.isCorrect ? 'Correct' : 'Incorrect'}</p>
+    </div>
+`).join('');
+
+            const feedbackContainer = document.createElement('div');
+            feedbackContainer.classList.add('feedback-container');
+            feedbackContainer.innerHTML = feedbackHTML;
+
+            // Add the feedback container to the feedback div
+            feedbackDiv.innerHTML = '';
+            feedbackDiv.appendChild(feedbackContainer);
+            // Display feedback to the user
+            console.log(feedbackData);
+        }
+        // Load questions when the page loads
+        (async () => {
+            // Fetch questions only if answers have not been submitted
+            if (!answersSubmitted) {
+                const questions = await fetchQuestions();
+                renderQuestions(questions);
+            }
+        })();
+        submitBtn.addEventListener('click', submitAnswers);
+    </script>
+
+</body>
+
+</html>
